@@ -1,9 +1,9 @@
 # mrc-tracks
 
-Every 30 minutes, a GitHub Action copies Marble Race Creator tracks from Discord forum posts that have the **Approved** tag into `site/`, then publishes them with GitHub Pages.
+Twice an hour (:17 and :47), a GitHub Action copies Marble Race Creator tracks from Discord forum posts that have the **Approved** tag into `site/`, then publishes them with GitHub Pages.
 
-- `index.json` — `{ generatedAt, tracks: [{ id, title, author, reactions, file, attachmentId, updatedAt, lastMessageId }] }`, newest first
-- `tracks/<threadId>.mrc|.txt` — the newest track file the post author put anywhere in the thread (newest by anyone if the author posted none). Threads with no new messages are not rescanned.
+- `index.json` — `{ format, generatedAt, tracks: [{ id, title, author, reactions, file, attachmentId, updatedAt, lastMessageId }] }`, newest first
+- `tracks/<threadId>.txt` — the newest track file (`.mrc` or `.txt`, max 2 MB) the post author put anywhere in the thread, always published as plain text (max 8 MB). Files by anyone else are ignored. `.mrc` files are unwrapped with a strict parser (single BinaryFormatter string record → base64 → gzip), so the game never runs BinaryFormatter or gzip on downloaded data. Threads with no new messages are not rescanned.
 
 The game reads `https://<user>.github.io/mrc-tracks/index.json` and downloads the `file` paths relative to it.
 
