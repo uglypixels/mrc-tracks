@@ -1,102 +1,53 @@
 {
- "generatedAt": "2026-11-24T14:28:23.518Z",
+ "format": 2,
+ "generatedAt": "2026-11-24T16:27:45.861Z",
  "tracks": [
-  {
-   "id": "1499194362955956464",
-   "title": "Cliffside Village GP",
-   "author": "Deleted User",
-   "reactions": 3,
-   "file": "tracks/1499194362955956464.mrc",
-   "attachmentId": "1499568182627799069",
-   "updatedAt": "2026-05-01T00:28:35.451000+00:00",
-   "lastMessageId": "1499772242211639387"
-  },
   {
    "id": "1376087256808292363",
    "title": "Echelon",
    "author": "DecayingAgent",
    "reactions": 2,
-   "file": "tracks/1376087256808292363.mrc",
+   "file": "tracks/1376087256808292363.txt",
    "attachmentId": "1376087344549204008",
    "updatedAt": "2025-05-25T06:39:49.523000+00:00",
    "lastMessageId": "1376087345035739166"
-  },
-  {
-   "id": "1128172732635418684",
-   "title": "Patented Chaos",
-   "author": "Deleted User",
-   "reactions": 19,
-   "file": "tracks/1128172732635418684.mrc",
-   "attachmentId": "1356615696154362066",
-   "updatedAt": "2025-04-01T13:06:26.711000+00:00",
-   "lastMessageId": "1574732772365303839"
   },
   {
    "id": "1346168588897353738",
    "title": "New map",
    "author": "yoshicool1010",
    "reactions": 12,
-   "file": "tracks/1346168588897353738.mrc",
+   "file": "tracks/1346168588897353738.txt",
    "attachmentId": "1353115160394465442",
    "updatedAt": "2025-03-22T21:16:34.007000+00:00",
    "lastMessageId": "1437948094074323105"
-  },
-  {
-   "id": "1349921009460838500",
-   "title": "Tiny Tracks",
-   "author": "Deleted User",
-   "reactions": 5,
-   "file": "tracks/1349921009460838500.mrc",
-   "attachmentId": "1349921010417270784",
-   "updatedAt": "2025-03-14T01:44:08.975000+00:00",
-   "lastMessageId": "1350143705247514636"
   },
   {
    "id": "1342493210177572964",
    "title": "Race City",
    "author": "ShanZ",
    "reactions": 4,
-   "file": "tracks/1342493210177572964.mrc",
+   "file": "tracks/1342493210177572964.txt",
    "attachmentId": "1344107468531175424",
    "updatedAt": "2025-02-26T00:43:12.909000+00:00",
    "lastMessageId": "1506901812840628284"
-  },
-  {
-   "id": "1145008918595121302",
-   "title": "YouTube",
-   "author": "Nicholas",
-   "reactions": 6,
-   "file": "tracks/1145008918595121302.mrc",
-   "attachmentId": "1343598355099680850",
-   "updatedAt": "2025-02-24T15:00:10.727000+00:00",
-   "lastMessageId": "1397602246216122420"
   },
   {
    "id": "1190813509559255130",
    "title": "Juke's Tower of Hells remake",
    "author": "DecayingAgent",
    "reactions": 5,
-   "file": "tracks/1190813509559255130.mrc",
+   "file": "tracks/1190813509559255130.txt",
    "attachmentId": "1338020791207592057",
    "updatedAt": "2025-02-09T05:36:55.915000+00:00",
    "lastMessageId": "1572877868029976637"
-  },
-  {
-   "id": "1165462226111565905",
-   "title": "MRC City (Highway Remastered)",
-   "author": "Deleted User",
-   "reactions": 11,
-   "file": "tracks/1165462226111565905.mrc",
-   "attachmentId": "1334349764132601856",
-   "updatedAt": "2025-01-30T02:29:34.860000+00:00",
-   "lastMessageId": "1448693531643351173"
   },
   {
    "id": "1312324980368998461",
    "title": "Courtship",
    "author": "DecayingAgent",
    "reactions": 3,
-   "file": "tracks/1312324980368998461.mrc",
+   "file": "tracks/1312324980368998461.txt",
    "attachmentId": "1312324981018984448",
    "updatedAt": "2024-11-30T07:50:57.139000+00:00",
    "lastMessageId": "1319636509644554241"
@@ -106,7 +57,7 @@
    "title": "Bowser's Castle",
    "author": "Nicholas",
    "reactions": 12,
-   "file": "tracks/1144494295768891402.mrc",
+   "file": "tracks/1144494295768891402.txt",
    "attachmentId": "1269349905089167390",
    "updatedAt": "2024-08-03T17:43:20.761000+00:00",
    "lastMessageId": "1574175023977996371"
@@ -116,30 +67,10 @@
    "title": "Island Tour",
    "author": "JamJam",
    "reactions": 6,
-   "file": "tracks/1262857023893147711.mrc",
+   "file": "tracks/1262857023893147711.txt",
    "attachmentId": "1262857026980155422",
    "updatedAt": "2024-07-16T19:42:57.245000+00:00",
    "lastMessageId": "1267301720825004032"
-  },
-  {
-   "id": "1143341239782084668",
-   "title": "Race World",
-   "author": "Deleted User",
-   "reactions": 18,
-   "file": "tracks/1143341239782084668.mrc",
-   "attachmentId": "1256013476187607131",
-   "updatedAt": "2024-06-27T22:29:19.352000+00:00",
-   "lastMessageId": "1474617708946657301"
-  },
-  {
-   "id": "1178057113621241897",
-   "title": "Swamp Track",
-   "author": "Deleted User",
-   "reactions": 9,
-   "file": "tracks/1178057113621241897.mrc",
-   "attachmentId": "1198654360180244590",
-   "updatedAt": "2024-01-21T15:44:29.457000+00:00",
-   "lastMessageId": "1353798780075638875"
   }
  ]
 }
