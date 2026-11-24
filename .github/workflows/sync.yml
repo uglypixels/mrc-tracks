@@ -1,7 +1,7 @@
 name: sync
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '17,47 * * * *' # off :00/:30, GitHub delays or drops runs at peak times
   workflow_dispatch:
 
 permissions:
