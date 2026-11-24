@@ -43,24 +43,28 @@ export async function sync({ token, guildId, forumId, approvedTag = 'Approved', 
     if (!t.applied_tags?.includes(tag.id)) continue;
     const prev = prevById.get(t.id);
     try {
-      const msg = await api(`/channels/${t.id}/messages/${t.id}`); // forum starter msg id == thread id
-      const att = msg?.attachments?.find((a) => TRACK_EXT.test(a.filename));
-      if (!att) continue;
-      const file = `tracks/${t.id}.${att.filename.match(TRACK_EXT)[1].toLowerCase()}`;
-      if (prev?.attachmentId !== att.id) {
-        const res = await fetch(att.url); // signed URL, fresh from the message fetch above
+      const starter = await api(`/channels/${t.id}/messages/${t.id}`); // forum starter msg id == thread id; null if deleted
+      // Thread unchanged since last run → keep the file we picked then (saves paging long threads).
+      let pick = prev && prev.lastMessageId === t.last_message_id
+        ? { attachmentId: prev.attachmentId, file: prev.file, updatedAt: prev.updatedAt }
+        : await pickTrack(api, t);
+      if (!pick) continue;
+      if (pick.att && prev?.attachmentId !== pick.attachmentId) {
+        const res = await fetch(pick.att.url); // signed URL, fresh from the message fetch above
         if (!res.ok) throw new Error(`download ${res.status}`);
-        await writeFile(`${out}/${file}`, Buffer.from(await res.arrayBuffer()));
-        log(`+ ${t.name} (${file})`);
+        await writeFile(`${out}/${pick.file}`, Buffer.from(await res.arrayBuffer()));
+        log(`+ ${t.name} (${pick.file})`);
       }
+      const author = (starter ?? pick.msg)?.author;
       tracks.push({
         id: t.id,
         title: t.name,
-        author: msg.author.global_name ?? msg.author.username,
-        reactions: (msg.reactions ?? []).reduce((s, r) => s + r.count, 0),
-        file,
-        attachmentId: att.id,
-        updatedAt: msg.edited_timestamp ?? msg.timestamp,
+        author: author ? author.global_name ?? author.username : prev?.author ?? '',
+        reactions: (starter?.reactions ?? []).reduce((s, r) => s + r.count, 0),
+        file: pick.file,
+        attachmentId: pick.attachmentId,
+        updatedAt: pick.updatedAt,
+        lastMessageId: t.last_message_id,
       });
     } catch (e) {
       // ponytail: one broken post must not block the rest; keep its last good copy
@@ -77,6 +81,30 @@ export async function sync({ token, guildId, forumId, approvedTag = 'Approved', 
   // generatedAt changes every run → every run commits → GitHub never disables the cron
   await writeFile(`${out}/index.json`, JSON.stringify({ generatedAt: new Date().toISOString(), tracks }, null, 1));
   return tracks;
+}
+
+// Newest track file posted by the thread's author (their updates); newest by anyone if the author posted none.
+async function pickTrack(api, t) {
+  let fallback;
+  for (let before; ;) {
+    const q = new URLSearchParams({ limit: '100', ...(before && { before }) });
+    const page = await api(`/channels/${t.id}/messages?${q}`); // newest first
+    if (!page?.length) break;
+    for (const msg of page) {
+      const att = msg.attachments?.find((a) => TRACK_EXT.test(a.filename));
+      if (!att) continue;
+      const pick = {
+        msg, att, attachmentId: att.id,
+        file: `tracks/${t.id}.${att.filename.match(TRACK_EXT)[1].toLowerCase()}`,
+        updatedAt: msg.edited_timestamp ?? msg.timestamp,
+      };
+      if (msg.author.id === t.owner_id) return pick;
+      fallback ??= pick;
+    }
+    if (page.length < 100) break;
+    before = page.at(-1).id;
+  }
+  return fallback;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
