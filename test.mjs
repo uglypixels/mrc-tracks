@@ -26,6 +26,8 @@ assert.throws(() => trackToText(mrc(TRACK, { trailer: [6, 11] })), /trailing rec
 assert.throws(() => trackToText(mrc('x'.repeat(MAX_TEXT_BYTES + 1)))); // zip bomb: gunzip cap
 assert.throws(() => trackToText(Buffer.from([0xff, 0xfe, 0, 1]))); // binary junk
 assert.throws(() => trackToText(Buffer.from('a\0b')), /not a track/);
+assert.throws(() => trackToText(Buffer.from('gg wp, here is my track!')), /no track header/); // chat message.txt
+assert.equal(trackToText(Buffer.from(gzipSync(TRACK).toString('base64'))), '7 owner id name 0 FF\n{1,2} {3,4}'); // pasted base64 gzip
 
 // --- sync against a fake Discord
 const TAG = { id: 'tagA', name: 'Approved' };
@@ -34,7 +36,10 @@ const thread = (id, tags, parent = 'forum') => ({
   id, name: `T${id}`, parent_id: parent, applied_tags: tags, owner_id: 'owner',
   last_message_id: id === '1' ? last1 : `m${id}`, thread_metadata: { archive_timestamp: `2026-01-0${id}` },
 });
-const user = (id) => ({ id, username: id, global_name: id === 'owner' ? 'Dee' : null });
+const GHOST = '456226577798135808'; // Discord's placeholder id for deleted accounts
+const user = (id) => id === GHOST
+  ? { id, username: 'Deleted User', global_name: null }
+  : { id, username: id, global_name: id === 'owner' ? 'Dee' : null };
 const msg = (id, author, files = [], day = 1) => ({
   id, author: user(author), timestamp: `2026-01-0${day}T00:00:00Z`, edited_timestamp: null,
   reactions: [{ count: 2 }, { count: 3 }],
@@ -51,12 +56,18 @@ globalThis.fetch = async (url) => {
   if (p === '/guilds/g/threads/active') return json({ threads: [thread('1', ['tagA']), thread('9', ['tagA'], 'other')] });
   if (p.startsWith('/channels/forum/threads/archived/public')) {
     return p.includes('before') // second page
-      ? json({ threads: [thread('3', ['tagA']), thread('4', ['tagA']), thread('5', ['tagA'])], has_more: false })
+      ? json({ threads: [thread('3', ['tagA']), thread('4', ['tagA']), thread('5', ['tagA']), thread('6', ['tagA']), thread('7', ['tagA'])], has_more: false })
       : json({ threads: [thread('2', [])], has_more: true });
   }
   // starters
   if (p === '/channels/1/messages/1') return json(msg('1', 'owner', [['img', 'shot.png'], [att1, 'Track.MRC']]));
-  if (/^\/channels\/[345]\/messages\/[345]$/.test(p)) return json(msg(p.at(-1), 'owner'));
+  if (p === '/channels/6/messages/6') return json(msg('6', GHOST, [['a6', 'Primum.mrc']])); // deleted account
+  if (/^\/channels\/[3457]\/messages\/[3457]$/.test(p)) return json(msg(p.at(-1), 'owner'));
+  if (p.startsWith('/channels/6/messages?')) { listCalls++; return json([msg('6', GHOST, [['a6', 'Primum.mrc']])]); }
+  if (p.startsWith('/channels/7/messages?')) {
+    listCalls++;
+    return json([msg('7c', 'owner', [['chat7', 'message.txt']], 6), msg('7b', 'owner', [['p7', 'message.txt']], 5)]);
+  }
   // thread histories, newest first
   if (p.startsWith('/channels/1/messages?')) { listCalls++; return json([msg('1', 'owner', [[att1, 'Track.MRC']])]); }
   if (p.startsWith('/channels/3/messages?')) {
@@ -71,7 +82,7 @@ globalThis.fetch = async (url) => {
   if (p.startsWith('/channels/5/messages?')) { listCalls++; return json([msg('5b', 'owner', [['big', 'huge.mrc', MAX_FILE_BYTES + 1]], 2)]); }
   if (url.startsWith('cdn/')) {
     downloads.push(url);
-    const body = url === 'cdn/a1' || url === 'cdn/a1b' ? mrc(`track ${url}`) : Buffer.from(`track ${url}`);
+    const body = url === 'cdn/a1' || url === 'cdn/a1b' ? mrc(`7 o ${url}`) : url === "cdn/p7" ? Buffer.from(gzipSync("7 o pasted").toString("base64")) : url === "cdn/chat7" ? Buffer.from("thanks for playing!") : Buffer.from(`7 o ${url}`);
     return { ok: true, arrayBuffer: async () => body };
   }
   throw new Error('unexpected ' + url);
@@ -85,13 +96,18 @@ const opts = { token: 't', guildId: 'g', forumId: 'forum', out, log: () => {} };
 
 let tracks = await sync(opts);
 const byId = Object.fromEntries(tracks.map((t) => [t.id, t]));
-assert.deepEqual(Object.keys(byId).sort(), ['1', '3']); // 4: only someone else's file; 5: author's file too big
+assert.deepEqual(Object.keys(byId).sort(), ['1', '3', '6', '7']); // 4: only someone else's file; 5: author's file too big
+assert.equal(byId['6'].author, 'Former Community Member'); // starter by a deleted account still counts as the author
+assert.equal(await readFile(join(out, 'tracks', '7.txt'), 'utf8'), '7 o pasted'); // chat message.txt skipped, older base64 paste decoded
+const skippedList = JSON.parse(await readFile(join(out, 'skipped.json'), 'utf8'));
+assert.deepEqual(skippedList.map((s) => s.id).sort(), ['4', '5']);
+assert.match(skippedList.find((s) => s.id === '4').reason, /no \.mrc\/\.txt file posted by the author/);
 assert.equal(byId['3'].file, 'tracks/3.txt'); // author's reply, not the newer file by someone else
 assert.equal(byId['1'].file, 'tracks/1.txt'); // .mrc published as text
 assert.equal(byId['1'].author, 'Dee');
 assert.equal(byId['1'].reactions, 5);
-assert.deepEqual((await readdir(join(out, 'tracks'))).sort(), ['1.txt', '3.txt']); // stale removed
-assert.equal(await readFile(join(out, 'tracks', '1.txt'), 'utf8'), 'track cdn/a1'); // decoded, re-downloaded despite old index
+assert.deepEqual((await readdir(join(out, 'tracks'))).sort(), ['1.txt', '3.txt', '6.txt', '7.txt']); // stale removed
+assert.equal(await readFile(join(out, 'tracks', '1.txt'), 'utf8'), '7 o cdn/a1'); // decoded, re-downloaded despite old index
 assert.equal(JSON.parse(await readFile(join(out, 'index.json'), 'utf8')).format, 2);
 
 downloads.length = 0; listCalls = 0;
@@ -102,5 +118,5 @@ assert.equal(listCalls, 2);      // only threads with nothing published yet (4, 
 att1 = 'a1b'; last1 = 'm1b';
 await sync(opts);
 assert.deepEqual(downloads, ['cdn/a1b']); // new message in thread 1 → rescanned, new file downloaded
-assert.equal(await readFile(join(out, 'tracks', '1.txt'), 'utf8'), 'track cdn/a1b');
+assert.equal(await readFile(join(out, 'tracks', '1.txt'), 'utf8'), '7 o cdn/a1b');
 console.log('ok');
